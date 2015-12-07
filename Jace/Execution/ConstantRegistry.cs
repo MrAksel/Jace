@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 
 namespace Jace.Execution
@@ -44,12 +45,12 @@ namespace Jace.Execution
             return constants.ContainsKey(ConvertConstantName(constantName));
         }
 
-        public void RegisterConstant(string constantName, double value)
+        public void RegisterConstant(string constantName, Complex value)
         {
             RegisterConstant(constantName, value, true);
         }
 
-        public void RegisterConstant(string constantName, double value, bool isOverWritable)
+        public void RegisterConstant(string constantName, Complex value, bool isOverWritable)
         {
             if(string.IsNullOrEmpty(constantName))
                 throw new ArgumentNullException("constantName");

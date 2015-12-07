@@ -3,14 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Jace.Operations;
+using System.Numerics;
 
 namespace Jace.Execution
 {
     public interface IExecutor
     {
-        double Execute(Operation operation, IFunctionRegistry functionRegistry);
-        double Execute(Operation operation, IFunctionRegistry functionRegistry, IDictionary<string, double> variables);
+        Complex Execute(Operation operation, IFunctionRegistry functionRegistry);
+        Complex Execute(Operation operation, IFunctionRegistry functionRegistry, IDictionary<string, Complex> variables);
 
-        Func<IDictionary<string, double>, double> BuildFormula(Operation operation, IFunctionRegistry functionRegistry);
+        Func<IDictionary<string, Complex>, Complex> BuildFormula(Operation operation, IFunctionRegistry functionRegistry);
     }
 }

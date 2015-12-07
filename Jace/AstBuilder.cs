@@ -5,6 +5,7 @@ using System.Text;
 using Jace.Execution;
 using Jace.Operations;
 using Jace.Tokenizer;
+using System.Numerics;
 
 namespace Jace
 {
@@ -52,6 +53,9 @@ namespace Jace
                         break;
                     case TokenType.FloatingPoint:
                         resultStack.Push(new FloatingPointConstant((double)token.Value));
+                        break;
+                    case TokenType.Complex:
+                        resultStack.Push(new ComplexConstant((Complex)token.Value));
                         break;
                     case TokenType.Text:
                         if (functionRegistry.IsFunctionName((string)token.Value))
@@ -190,11 +194,6 @@ namespace Jace
                         divident = resultStack.Pop();
 
                         return new Division(DataType.FloatingPoint, divident, divisor);
-                    case '%':
-                        divisor = resultStack.Pop();
-                        divident = resultStack.Pop();
-
-                        return new Modulo(DataType.FloatingPoint, divident, divisor);
                     case '_':
                         argument1 = resultStack.Pop();
 
@@ -204,42 +203,6 @@ namespace Jace
                         Operation @base = resultStack.Pop();
 
                         return new Exponentiation(DataType.FloatingPoint, @base, exponent);
-                    case '<':
-                        argument2 = resultStack.Pop();
-                        argument1 = resultStack.Pop();
-                        dataType = RequiredDataType(argument1, argument2);
-
-                        return new LessThan(dataType, argument1, argument2);
-                    case '≤':
-                        argument2 = resultStack.Pop();
-                        argument1 = resultStack.Pop();
-                        dataType = RequiredDataType(argument1, argument2);
-
-                        return new LessOrEqualThan(dataType, argument1, argument2);
-                    case '>':
-                        argument2 = resultStack.Pop();
-                        argument1 = resultStack.Pop();
-                        dataType = RequiredDataType(argument1, argument2);
-
-                        return new GreaterThan(dataType, argument1, argument2);
-                    case '≥':
-                        argument2 = resultStack.Pop();
-                        argument1 = resultStack.Pop();
-                        dataType = RequiredDataType(argument1, argument2);
-
-                        return new GreaterOrEqualThan(dataType, argument1, argument2);
-                    case '=':
-                        argument2 = resultStack.Pop();
-                        argument1 = resultStack.Pop();
-                        dataType = RequiredDataType(argument1, argument2);
-
-                        return new Equal(dataType, argument1, argument2);
-                    case '≠':
-                        argument2 = resultStack.Pop();
-                        argument1 = resultStack.Pop();
-                        dataType = RequiredDataType(argument1, argument2);
-
-                        return new NotEqual(dataType, argument1, argument2);
                     default:
                         throw new ArgumentException(string.Format("Unknown operation \"{0}\".", operationToken), "operation");
                 }
@@ -304,6 +267,11 @@ namespace Jace
                         FloatingPointConstant constant = (FloatingPointConstant)operation;
                         throw new ParseException(string.Format("Unexpected floating point constant \"{0}\" found.", constant.Value)); 
                     }
+                    else if (operation.GetType() == typeof(ComplexConstant))
+                    {
+                        ComplexConstant constant = (ComplexConstant)operation;
+                        throw new ParseException(string.Format("Unexpected complex constant \"{0}\" found.", constant.Value));
+                    }
                 }
 
                 throw new ParseException("The syntax of the provided formula is not valid.");
@@ -317,6 +285,8 @@ namespace Jace
 
         private DataType RequiredDataType(Operation argument1, Operation argument2)
         {
+            if (argument1.DataType == DataType.Complex || argument2.DataType == DataType.Complex)
+                return DataType.Complex;
             return (argument1.DataType == DataType.FloatingPoint || argument2.DataType == DataType.FloatingPoint) ? DataType.FloatingPoint : DataType.Integer;
         }
     }

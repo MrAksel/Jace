@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using Jace.Operations;
+using System.Numerics;
 
 namespace Jace.Util
 {
@@ -29,7 +30,7 @@ namespace Jace.Util
         /// <param name="function">The function that must be wrapped.</param>
         /// <returns>A delegate instance of the required type.</returns>
         public Delegate Wrap(IEnumerable<Jace.Execution.ParameterInfo> parameters, 
-            Func<Dictionary<string, double>, double> function)
+            Func<Dictionary<string, Complex>, Complex> function)
         {
             Jace.Execution.ParameterInfo[] parameterArray = parameters.ToArray();
 
@@ -61,104 +62,16 @@ namespace Jace.Util
         //    assemblyBuilder.Save(@"test.dll");
         //}
 
-#if !NETFX_CORE
         private Delegate GenerateDelegate(Jace.Execution.ParameterInfo[] parameterArray,
-            Func<Dictionary<string, double>, double> function)
-        {
-            Type[] parameterTypes = GetParameterTypes(parameterArray);
-
-            Type delegateType = GetDelegateType(parameterArray);
-
-            DynamicMethod method = new DynamicMethod("FuncWrapperMethod", typeof(double),
-                parameterTypes, typeof(FuncAdapterArguments));
-
-            ILGenerator generator = method.GetILGenerator();
-
-            GenerateMethodBody(generator, parameterArray, function);
-
-            for (int i = 0; i < parameterArray.Length; i++)
-            {
-                Jace.Execution.ParameterInfo parameter = parameterArray[i];
-                method.DefineParameter((i + 1), ParameterAttributes.In, parameter.Name);
-            }
-
-            return method.CreateDelegate(delegateType, new FuncAdapterArguments(function));
-        }
-
-        private Type[] GetParameterTypes(Jace.Execution.ParameterInfo[] parameters)
-        {
-            Type[] parameterTypes = new Type[parameters.Length + 1];
-
-            parameterTypes[0] = typeof(FuncAdapterArguments);
-
-            for (int i = 0; i < parameters.Length; i++)
-                parameterTypes[i + 1] = (parameters[i].DataType == DataType.FloatingPoint) ? typeof(double) : typeof(int);
-
-            return parameterTypes;
-        }
-
-        private void GenerateMethodBody(ILGenerator generator, Jace.Execution.ParameterInfo[] parameters,
-            Func<Dictionary<string, double>, double> function)
-        {
-            Type dictionaryType = typeof(Dictionary<string, double>);
-            ConstructorInfo dictionaryConstructorInfo = dictionaryType.GetConstructor(Type.EmptyTypes);
-
-            FieldInfo functionField = typeof(FuncAdapterArguments).GetField("function", 
-                BindingFlags.NonPublic | BindingFlags.Instance);
-
-            generator.DeclareLocal(dictionaryType);
-            generator.DeclareLocal(typeof(double));
-
-            generator.Emit(OpCodes.Newobj, dictionaryConstructorInfo);
-            generator.Emit(OpCodes.Stloc_0);
-
-            for (int i = 0; i < parameters.Length; i++)
-            {
-                Jace.Execution.ParameterInfo parameter = parameters[i];
-
-                generator.Emit(OpCodes.Ldloc_0);
-                generator.Emit(OpCodes.Ldstr, parameter.Name);
-
-                switch (i)
-                {
-                    case 0:
-                        generator.Emit(OpCodes.Ldarg_1);
-                        break;
-                    case 1:
-                        generator.Emit(OpCodes.Ldarg_2);
-                        break;
-                    case 2:
-                        generator.Emit(OpCodes.Ldarg_3);
-                        break;
-                    default:
-                        generator.Emit(OpCodes.Ldarg, i + 1);
-                        break;
-                }
-
-                if (parameter.DataType != DataType.FloatingPoint)
-                    generator.Emit(OpCodes.Conv_R8);
-
-                generator.Emit(OpCodes.Callvirt, dictionaryType.GetMethod("Add", new Type[] { typeof(string), typeof(double) }));
-            }
-
-            generator.Emit(OpCodes.Ldarg_0);
-            generator.Emit(OpCodes.Ldfld, functionField);
-            generator.Emit(OpCodes.Ldloc_0);
-            generator.Emit(OpCodes.Callvirt, function.GetType().GetMethod("Invoke"));
-
-            generator.Emit(OpCodes.Ret);
-        }
-#else
-        private Delegate GenerateDelegate(Jace.Execution.ParameterInfo[] parameterArray,
-            Func<Dictionary<string, double>, double> function)
+            Func<Dictionary<string, Complex>, Complex> function)
         {
             Type delegateType = GetDelegateType(parameterArray);
-            Type dictionaryType = typeof(Dictionary<string, double>);
+            Type dictionaryType = typeof(Dictionary<string, Complex>);
 
-            LabelTarget returnLabel = Expression.Label(typeof(double));
+            LabelTarget returnLabel = Expression.Label(typeof(Complex));
 
             ParameterExpression dictionaryExpression =
-                Expression.Variable(typeof(Dictionary<string, double>), "dictionary");
+                Expression.Variable(typeof(Dictionary<string, Complex>), "dictionary");
             BinaryExpression dictionaryAssignExpression =
                 Expression.Assign(dictionaryExpression, Expression.New(dictionaryType));
 
@@ -170,20 +83,30 @@ namespace Jace.Util
             for (int i = 0; i < parameterArray.Length; i++)
             {
                 // Create parameter expression for each func parameter
-                Type parameterType = parameterArray[i].DataType == DataType.FloatingPoint ? typeof(double) : typeof(int);
+                Type parameterType;
+                switch (parameterArray[i].DataType)
+                {
+                    case DataType.Integer:
+                        parameterType = typeof(int); break;
+                    case DataType.FloatingPoint:
+                        parameterType = typeof(float); break;
+                    default:
+                    case DataType.Complex:
+                        parameterType = typeof(Complex); break;
+                }
                 parameterExpressions[i] = Expression.Parameter(parameterType, parameterArray[i].Name);
 
                 methodBody.Add(Expression.Call(dictionaryExpression,
-                    dictionaryType.GetRuntimeMethod("Add", new Type[] { typeof(string), typeof(double) }),
+                    dictionaryType.GetRuntimeMethod("Add", new Type[] { typeof(string), typeof(Complex) }),
                     Expression.Constant(parameterArray[i].Name),
-                    Expression.Convert(parameterExpressions[i], typeof(double)))
+                    Expression.Convert(parameterExpressions[i], typeof(Complex)))
                     );
             }
 
             InvocationExpression invokeExpression = Expression.Invoke(Expression.Constant(function), dictionaryExpression);
             methodBody.Add(invokeExpression);
             methodBody.Add(Expression.Return(returnLabel, invokeExpression));
-            methodBody.Add(Expression.Label(returnLabel, Expression.Constant(0.0)));
+            methodBody.Add(Expression.Label(returnLabel, Expression.Constant(Complex.Zero)));
 
             LambdaExpression lambdaExpression = Expression.Lambda(delegateType,
                 Expression.Block(new[] { dictionaryExpression }, methodBody),
@@ -191,7 +114,6 @@ namespace Jace.Util
 
             return lambdaExpression.Compile();
         }
-#endif
 
         private Type GetDelegateType(Jace.Execution.ParameterInfo[] parameters)
         {
@@ -200,17 +122,28 @@ namespace Jace.Util
 
             Type[] typeArguments = new Type[parameters.Length + 1];
             for (int i = 0; i < parameters.Length; i++)
-                typeArguments[i] = (parameters[i].DataType == DataType.FloatingPoint) ? typeof(double) : typeof(int);
-            typeArguments[typeArguments.Length - 1] = typeof(double);
+            {
+                switch (parameters[i].DataType)
+                {
+                    case DataType.Integer:
+                        typeArguments[i] = typeof(int); break;
+                    case DataType.FloatingPoint:
+                        typeArguments[i] = typeof(float); break;
+                    default:
+                    case DataType.Complex:
+                        typeArguments[i] = typeof(Complex); break;
+                }
+            }
+            typeArguments[typeArguments.Length - 1] = typeof(Complex);
 
             return funcType.MakeGenericType(typeArguments);
         }
 
         private class FuncAdapterArguments
         {
-            private readonly Func<Dictionary<string, double>, double> function;
+            private readonly Func<Dictionary<string, Complex>, Complex> function;
 
-            public FuncAdapterArguments(Func<Dictionary<string, double>, double> function)
+            public FuncAdapterArguments(Func<Dictionary<string, Complex>, Complex> function)
             {
                 this.function = function;
             }

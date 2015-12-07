@@ -5,6 +5,7 @@ using System.Text;
 using Jace.Operations;
 using Jace.Execution;
 using Jace.Tests.Mocks;
+using System.Numerics;
 
 #if NETFX_CORE
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
@@ -27,7 +28,7 @@ namespace Jace.Tests
             IFunctionRegistry functionRegistry = new MockFunctionRegistry();
 
             IExecutor executor = new Interpreter();
-            double result = executor.Execute(new Subtraction(
+            Complex result = executor.Execute(new Subtraction(
                 DataType.Integer,
                 new IntegerConstant(6),
                 new IntegerConstant(9)), functionRegistry);
@@ -42,7 +43,7 @@ namespace Jace.Tests
 
             IExecutor executor = new Interpreter();
             // 6 + (2 * 4)
-            double result = executor.Execute(
+            Complex result = executor.Execute(
                 new Addition(
                     DataType.Integer,
                     new IntegerConstant(6),
@@ -59,13 +60,13 @@ namespace Jace.Tests
         {
             IFunctionRegistry functionRegistry = new MockFunctionRegistry();
 
-            Dictionary<string, double> variables = new Dictionary<string, double>();
+            Dictionary<string, Complex> variables = new Dictionary<string, Complex>();
             variables.Add("var1", 2);
             variables.Add("age", 4);
 
             IExecutor interpreter = new Interpreter();
             // var1 + 2 * (3 * age)
-            double result = interpreter.Execute(
+            Complex result = interpreter.Execute(
                 new Addition(DataType.FloatingPoint,
                     new Variable("var1"),
                     new Multiplication(

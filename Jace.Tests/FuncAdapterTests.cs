@@ -5,6 +5,7 @@ using System.Text;
 using Jace.Execution;
 using Jace.Operations;
 using Jace.Util;
+using System.Numerics;
 
 #if NETFX_CORE
 using Microsoft.VisualStudio.TestPlatform.UnitTestFramework;
@@ -31,9 +32,9 @@ namespace Jace.Tests
                 new ParameterInfo() { Name = "test2", DataType = DataType.FloatingPoint }
             };
 
-            Func<Dictionary<string, double>, double> function = (dictionary) => dictionary["test1"] + dictionary["test2"]; 
+            Func<Dictionary<string, Complex>, Complex> function = (dictionary) => dictionary["test1"] + dictionary["test2"]; 
 
-            Func<int, double, double> wrappedFunction = (Func<int, double, double>)adapter.Wrap(parameters, function);
+            Func<int, Complex, double> wrappedFunction = (Func<int, Complex, double>)adapter.Wrap(parameters, function);
 
             Assert.AreEqual(3.0, wrappedFunction(1, 2.0));
         }
@@ -48,9 +49,9 @@ namespace Jace.Tests
                 new ParameterInfo() { Name = "test2", DataType = DataType.FloatingPoint }
             };
 
-            Func<Dictionary<string, double>, double> function = (dictionary) => dictionary["test1"] + dictionary["test2"];
+            Func<Dictionary<string, Complex>, Complex> function = (dictionary) => dictionary["test1"] + dictionary["test2"];
 
-            Func<int, double, double> wrappedFunction = (Func<int, double, double>)adapter.Wrap(parameters, function);
+            Func<int, Complex, double> wrappedFunction = (Func<int, Complex, double>)adapter.Wrap(parameters, function);
 
             adapter = null;
             GC.Collect();

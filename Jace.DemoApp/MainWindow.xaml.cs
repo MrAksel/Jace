@@ -15,6 +15,7 @@ using System.Windows.Shapes;
 using Jace.Execution;
 using Jace.Operations;
 using Jace.Tokenizer;
+using System.Numerics;
 
 namespace Jace.DemoApp
 {
@@ -30,40 +31,35 @@ namespace Jace.DemoApp
 
         private void calculateButton_Click(object sender, RoutedEventArgs e)
         {
-            try
+            ClearScreen();
+
+            string formula = formulaTextBox.Text;
+
+            TokenReader reader = new TokenReader(CultureInfo.InvariantCulture);
+            List<Token> tokens = reader.Read(formula);
+
+            ShowTokens(tokens);
+
+            IFunctionRegistry functionRegistry = new FunctionRegistry(false);
+            functionRegistry.RegisterFunction("sqrt", new Func<Complex, Complex>((a) => Complex.Sqrt(a)));
+
+            AstBuilder astBuilder = new AstBuilder(functionRegistry);
+            Operation operation = astBuilder.Build(tokens);
+
+            ShowAbstractSyntaxTree(operation);
+
+            Dictionary<string, Complex> variables = new Dictionary<string, Complex>();
+            foreach (Variable variable in GetVariables(operation))
             {
-                ClearScreen();
-
-                string formula = formulaTextBox.Text;
-
-                TokenReader reader = new TokenReader(CultureInfo.InvariantCulture);
-                List<Token> tokens = reader.Read(formula);
-
-                ShowTokens(tokens);
-
-                IFunctionRegistry functionRegistry = new FunctionRegistry(false);
-
-                AstBuilder astBuilder = new AstBuilder(functionRegistry);
-                Operation operation = astBuilder.Build(tokens);
-
-                ShowAbstractSyntaxTree(operation);
-
-                Dictionary<string, double> variables = new Dictionary<string, double>();
-                foreach (Variable variable in GetVariables(operation))
-                {
-                    double value = AskValueOfVariable(variable);
-                    variables.Add(variable.Name, value);
-                }
-
-                IExecutor executor = new Interpreter();
-                double result = executor.Execute(operation, null, variables);
-
-                resultTextBox.Text = "" + result;
+                Complex value = AskValueOfVariable(variable);
+                variables.Add(variable.Name, value);
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+            variables.Add("i", Complex.ImaginaryOne);
+
+            IExecutor executor = new Interpreter();
+            Complex result = executor.Execute(operation, functionRegistry, variables);
+
+            resultTextBox.Text = "" + result;
         }
 
         private void ClearScreen()
@@ -74,10 +70,10 @@ namespace Jace.DemoApp
         }
 
         private void ShowTokens(List<Token> tokens)
-        { 
+        {
             string result = "[ ";
 
-            for(int i = 0; i < tokens.Count; i++)
+            for (int i = 0; i < tokens.Count; i++)
             {
                 object token = tokens[i].Value;
 
@@ -223,7 +219,8 @@ namespace Jace.DemoApp
             {
                 if (operation.GetType() == typeof(Variable))
                 {
-                    variables.Add((Variable)operation);
+                    if (((Variable)operation).Name != "i")
+                        variables.Add((Variable)operation);
                 }
                 else if (operation.GetType() == typeof(Addition))
                 {
@@ -266,7 +263,7 @@ namespace Jace.DemoApp
             }
         }
 
-        private double AskValueOfVariable(Variable variable)
+        private Complex AskValueOfVariable(Variable variable)
         {
             InputDialog dialog = new InputDialog(variable.Name);
             dialog.ShowDialog();

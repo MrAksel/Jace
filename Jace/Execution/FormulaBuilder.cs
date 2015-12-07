@@ -6,6 +6,7 @@ using System.Reflection.Emit;
 using System.Text;
 using Jace.Operations;
 using Jace.Util;
+using System.Numerics;
 
 namespace Jace.Execution
 {
@@ -77,7 +78,7 @@ namespace Jace.Execution
             if (!resultDataType.HasValue)
                 throw new Exception("Please define a result data type for the formula.");
 
-            Func<Dictionary<string, double>, double> formula = engine.Build(formulaText);
+            Func<Dictionary<string, Complex>, Complex> formula = engine.Build(formulaText);
 
             FuncAdapter adapter = new FuncAdapter();
             return adapter.Wrap(parameters, variables => formula(variables));

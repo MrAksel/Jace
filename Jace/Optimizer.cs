@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Jace.Operations;
 using Jace.Execution;
+using System.Numerics;
 
 namespace Jace
 {
@@ -18,11 +19,13 @@ namespace Jace
 
         public Operation Optimize(Operation operation, IFunctionRegistry functionRegistry)
         {
-            if (!operation.DependsOnVariables && operation.GetType() != typeof(IntegerConstant)
-                && operation.GetType() != typeof(FloatingPointConstant))
+            if (!operation.DependsOnVariables &&
+                operation.GetType() != typeof(IntegerConstant) &&
+                operation.GetType() != typeof(FloatingPointConstant) && 
+                operation.GetType() != typeof(ComplexConstant))
             {
-                double result = executor.Execute(operation, functionRegistry);
-                return new FloatingPointConstant(result);
+                Complex result = executor.Execute(operation, functionRegistry);
+                return new ComplexConstant(result);
             }
             else
             {

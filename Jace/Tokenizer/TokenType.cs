@@ -13,6 +13,7 @@ namespace Jace.Tokenizer
         Operation,
         LeftBracket,
         RightBracket,
-        ArgumentSeparator
+        ArgumentSeparator,
+        Complex
     }
 }

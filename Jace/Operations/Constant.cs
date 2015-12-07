@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 
 namespace Jace.Operations
@@ -42,6 +43,14 @@ namespace Jace.Operations
     {
         public FloatingPointConstant(double value)
             : base(DataType.FloatingPoint, value)
+        {
+        }
+    }
+
+    public class ComplexConstant : Constant<Complex>
+    {
+        public ComplexConstant(Complex value)
+            : base(DataType.Complex, value)
         {
         }
     }

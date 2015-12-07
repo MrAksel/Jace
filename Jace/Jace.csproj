@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Jace</RootNamespace>
     <AssemblyName>Jace</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -18,18 +19,20 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NOEMIT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;NOEMIT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject />
@@ -37,6 +40,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -63,15 +67,8 @@
     <Compile Include="Operations\Addition.cs" />
     <Compile Include="Operations\Constant.cs" />
     <Compile Include="Operations\Division.cs" />
-    <Compile Include="Operations\NotEqual.cs" />
     <Compile Include="Operations\Exponentiation.cs" />
     <Compile Include="Operations\Function.cs" />
-    <Compile Include="Operations\GreaterOrEqualThan.cs" />
-    <Compile Include="Operations\GreaterThan.cs" />
-    <Compile Include="Operations\LessOrEqualThan.cs" />
-    <Compile Include="Operations\Equal.cs" />
-    <Compile Include="Operations\LessThan.cs" />
-    <Compile Include="Operations\Modulo.cs" />
     <Compile Include="Operations\Operation.cs" />
     <Compile Include="Operations\Multiplication.cs" />
     <Compile Include="Operations\Subtraction.cs" />
