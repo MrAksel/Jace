@@ -261,6 +261,7 @@ namespace Jace
 
         private void RegisterDefaultConstants()
         {
+            ConstantRegistry.RegisterConstant("i", Complex.ImaginaryOne, false);
             ConstantRegistry.RegisterConstant("e", Math.E, false);
             ConstantRegistry.RegisterConstant("pi", Math.PI, false);
         }
